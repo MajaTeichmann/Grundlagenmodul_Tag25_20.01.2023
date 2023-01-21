@@ -10,29 +10,51 @@ val standartKartendeck: List<String> = listOf(
     "Karo Ass", "Karo Koenig", "Karo Dame", "Karo Bube", "Karo 10", "Karo 9",
     "Karo 8", "Karo 7", "Karo 6", "Karo 5", "Karo 4", "Karo 3", "Karo 2",
 )
-var unserKartendeck = standartKartendeck.shuffled().toMutableList()
-var bereitsGespielteKarten = mutableListOf<String>()
-var index = 0
-var entscheidung = 0
-var leben = 1
-var maxRunden = standartKartendeck.size
-var spielRunden = 0
-var gespielteRunden = 0
-var zufaelligeKarte = unserKartendeck.random()
 
+// todo: überprüfung der entscheidung ist irgendwo falsch
+//  bei richtig, wird direkt die nächste karte gezogen (soll sie nicht xD)
+//  es wird keine neue random karte gezogen
+
+val maxRunden = standartKartendeck.size
+var rundenAnzahl = 0
+var witzbold = 0
+var unserKartenDeck = standartKartendeck.shuffled().toMutableList()
+var leben = 1
+var gespielteRunden = 0
+var zufaelligeKarte = ""
+var bereitsGespielteKarten = mutableListOf<String>()
+var eingabe = 0
+var index = 0
 fun main() {
-    begruessungUndSpielregeln()
-    println()
-    hoeherTieferOderGleich()
+    spiel()
 }
 
-fun begruessungUndSpielregeln() {
-    // begrüßung
+fun spiel(){
+    //EINSTELLUNGEN
+    //Begrüßung und evtl. Spielregeln
+    begruessung()
+
+    //Lege Rundenanzahl fest
+    rundenAnzahlFestlegen()
+
+    //Karten werden gemischt
+    mischen()
+
+    //EIGENTLICHES SPIEL
+    hoeherTieferGleich()
+}
+
+fun begruessung() {
     println("Herzlich Willkommen bei 'Höher, Tiefer oder Gleich'!")
+    Thread.sleep(1000)
+    println("Wollen Sie die Spielregeln sehen? [1] für JA, [2] für NEIN")
+    eingabe = readln().toInt()
+    if(eingabe == 1){
+        spielregeln()
+    }
+}
 
-    println()
-
-    // Spielerklärung
+fun spielregeln() {
     println(
         """
         Spielregeln:
@@ -42,144 +64,152 @@ fun begruessungUndSpielregeln() {
         liegst du aber FALSCH, ist das Spiel beendet.
         Viel Glück!""".trimIndent()
     )
+    Thread.sleep(1000)
 }
 
-// überprüfung der entscheidung ist irgendwo falsch
-// bei richtig, wird direkt die nächste karte gezogen (soll sie nicht xD)
-// es wird keine neue random karte gezogen
-fun hoeherTieferOderGleich() {
-
+fun rundenAnzahlFestlegen() {
     println(
         """
         Zunächst lege bitte fest, wieviele Runden du MAXIMAL spielen möchtest.
         Bedenke: Mehr als $maxRunden Runden sind nicht möglich!""".trimIndent()
     )
-    spielRunden = readln().toInt()
-    if (spielRunden > 0) {
-        println("Vielen Dank, wir spielen nun maximal $spielRunden Runden!")
+    rundenAnzahl = readln().toInt()
+    if (rundenAnzahl in 1..maxRunden) {
+        println("Vielen Dank, wir spielen nun maximal $rundenAnzahl Runden!")
     } else {
-        var witzbold = 1
-        while (witzbold <= 100) {
-            println("ERROR!")
+        while (witzbold < 1) {
+            Thread.sleep(1000)
+            println()
+            println(
+                "Exception in thread \"main\" java.lang.ArrayIndexOutOfBoundsException: Index ${rundenAnzahl} out of bounds for length ${standartKartendeck.size}\n" +
+                        "\tat java.base/java.util.Arrays$ ArrayList.get(Arrays.java:4165)\n" +
+                        "\tat KartenSpielenKt.main(KartenSpielen.kt:39)\n" +
+                        "\tat KartenSpielenKt.main(KartenSpielen.kt)"
+            )
+            println()
+            println("Process finished with exit code 1")
+            Thread.sleep(5000)
             witzbold++
+            println(
+                """
+                Hab dich nur veräppelt...
+                Wir spielen jetzt eine [1] Spielrunde, du Witzbold!""".trimIndent()
+            )
+            rundenAnzahl = 1
         }
-        Thread.sleep(3000)
-        println(
-            """
-            Hab dich nur veräppelt ;)
-            Wir spielen jetzt eine [1] Spielrunde, du Witzbold!""".trimIndent()
-        )
-        spielRunden = 1
     }
+    Thread.sleep(1000)
+}
 
-    // computer mischt kartendeck
-    println("Computer mischt Spielkarten...")
+fun mischen(){
+    println("Computer mischt die Spielkarten...")
+    unserKartenDeck = standartKartendeck.shuffled().toMutableList()
+}
 
-    while (leben == 1 && gespielteRunden == 0 && index == 0) {
-        // computer deckt 1. karte auf und zeigt Kartenwert
-        zufaelligeKarte = unserKartendeck.random()
-        println("Unsere erste Karte ist: $zufaelligeKarte [${kartenWert(zufaelligeKarte)}]")
-        bereitsGespielteKarten.add(zufaelligeKarte)
-        unserKartendeck.remove(zufaelligeKarte)
-        println()
+fun hoeherTieferGleich() {
+    leben = 1
+    gespielteRunden = 0
+    while (leben == 1) {
+        if (gespielteRunden == 0 && index == 0) {
+            gespielteRunden++
+            println("Runde ${gespielteRunden} von ${rundenAnzahl}")
+            zufaelligeKarte = unserKartenDeck.random()
+            println("Unsere Karte ist: $zufaelligeKarte [${kartenWert(zufaelligeKarte)}]")
+            addToBereitsGespielteKarte_RemoveFromUnserKartenDeck()
 
-        // spieler hat auswahl, ob nächste karte höher oder tiefer ist
-        println(
-            """
-            Nun bist du am Zug!
-            Ist die nächste zufällige Karte Höher [1], Tiefer [2] oder Gleich [3]?""".trimIndent()
-        )
-        entscheidung = readln().toInt()
-        println("Unsere nächste Karte ist: $zufaelligeKarte [${kartenWert(zufaelligeKarte)}]")
-        spielerEntscheidung()
-
-        println()
-
-        unserKartendeck.remove(zufaelligeKarte)
-        gespielteRunden++
-        index++
-        println()
+            println("Ist die nächste zufällige Karte Höher [1], Tiefer [2] oder Gleich [3]?")
+            eingabe = readln().toInt()
+            zufaelligeKarte = unserKartenDeck.random()
+            println("Unsere Karte ist: $zufaelligeKarte [${kartenWert(zufaelligeKarte)}]")
+            println("${kartenWert(bereitsGespielteKarten[index])} vs. ${kartenWert(zufaelligeKarte)}")
+            spielEntscheidung()
+        }
+        else if (gespielteRunden > 0 && gespielteRunden < rundenAnzahl) {
+            gespielteRunden++
+            println("Runde ${gespielteRunden} von ${rundenAnzahl}")
+            println("$zufaelligeKarte [${kartenWert(zufaelligeKarte)}]")
+            index++
+            println("Ist die nächste zufällige Karte Höher [1], Tiefer [2] oder Gleich [3]?")
+            eingabe = readln().toInt()
+            addToBereitsGespielteKarte_RemoveFromUnserKartenDeck()
+            zufaelligeKarte = unserKartenDeck.random()
+            println("Unsere Karte ist: $zufaelligeKarte [${kartenWert(zufaelligeKarte)}]")
+            addToBereitsGespielteKarte_RemoveFromUnserKartenDeck()
+            println(bereitsGespielteKarten)
+            println("${kartenWert(bereitsGespielteKarten[index])} vs. ${kartenWert(zufaelligeKarte)}")
+            spielEntscheidung()
+        }
+        else if(gespielteRunden > rundenAnzahl){
+            println("Maximale Spielrunden absolviert!")
+            spielNeuStarten()
+        }
     }
-    while (leben == 1 && spielRunden >= gespielteRunden && spielRunden <= maxRunden) {
-        // computer deckt nächste karte auf & zeigt Kartenwert
-        println("Unsere nächste Karte ist: $zufaelligeKarte [${kartenWert(zufaelligeKarte)}]")
-        println()
-        println("Ist die nächste zufällige Karte Höher [1], Tiefer [2] oder Gleich [3]?")
-        entscheidung = readln().toInt()
-        spielerEntscheidung()
-        println()
-        println("${kartenWert(bereitsGespielteKarten[index])} vs. ${kartenWert(zufaelligeKarte)}")
-        println()
-        bereitsGespielteKarten.add(zufaelligeKarte)
-        println()
-        println(
-            """
-            Nun bist du am Zug!
-            Ist die nächste zufällige Karte Höher [1], Tiefer [2] oder Gleich [3]?""".trimIndent()
-        )
-        spielerEntscheidung()
-        gespielteRunden++
-        index++
-        println()
-        println("zum testen: $bereitsGespielteKarten")
+}
+fun addToBereitsGespielteKarte_RemoveFromUnserKartenDeck(){
+    bereitsGespielteKarten.add(zufaelligeKarte)
+    unserKartenDeck.remove(zufaelligeKarte)
+}
+
+fun spielEntscheidung(){
+    if(eingabe == 1){
+        if(kartenWert(zufaelligeKarte) > kartenWert(bereitsGespielteKarten[index])){
+            println("richtig!")
+            addToBereitsGespielteKarte_RemoveFromUnserKartenDeck()
+        }else{
+            leben--
+            falschGeraten()
+        }
     }
-    println(
-        """
-        Maximale Spielrunden absolviert!
-        Erneut?""".trimIndent()
-    )
-    entscheidung = readln().toInt()
-    if (entscheidung == 1) {
-        hoeherTieferOderGleich()
+    else if(eingabe == 2){
+        if(kartenWert(zufaelligeKarte) < kartenWert(bereitsGespielteKarten[index])){
+            println("richtig!")
+            addToBereitsGespielteKarte_RemoveFromUnserKartenDeck()
+        }else{
+            leben--
+            falschGeraten()
+        }
+    }
+    else if(eingabe == 3){
+        if(kartenWert(zufaelligeKarte) == kartenWert(bereitsGespielteKarten[index])){
+            println("richtig!")
+            addToBereitsGespielteKarte_RemoveFromUnserKartenDeck()
+        }else{
+            leben--
+            falschGeraten()
+        }
+    }else{
+        println("Du musst dich wohl vertippt haben. Versuche es erneut!")
+        return spielEntscheidung()
+    }
+}
+
+fun falschGeraten(){
+    println("Das war leider falsch!")
+    spielNeuStarten()
+}
+
+fun spielNeuStarten(){
+    println("Neuer Versuch? [1] für ja, [2] für nein")
+    eingabe = readln().toInt()
+    if (eingabe == 1) {
+        standartEinstellungen()
+        main()
     } else {
         println("Auf Wiedersehen!")
     }
 }
 
-fun spielerEntscheidung() {
-    when (entscheidung) {
-        1 -> {
-            if (kartenWert(zufaelligeKarte) > kartenWert(bereitsGespielteKarten[index])) {
-                println("Du hast richtig geraten!")
-                bereitsGespielteKarten.add(zufaelligeKarte)
-                unserKartendeck.remove(zufaelligeKarte)
-            } else {
-                falschGeraten()
-            }
-        }
-
-        2 -> {
-            if (kartenWert(zufaelligeKarte) < kartenWert(bereitsGespielteKarten[index])) {
-                println("Du hast richtig geraten!")
-                bereitsGespielteKarten.add(zufaelligeKarte)
-                unserKartendeck.remove(zufaelligeKarte)
-            } else {
-                falschGeraten()
-            }
-        }
-
-        3 -> {
-            if (kartenWert(zufaelligeKarte) == kartenWert(bereitsGespielteKarten[index])) {
-                println("Du hast richtig geraten!")
-                bereitsGespielteKarten.add(zufaelligeKarte)
-                unserKartendeck.remove(zufaelligeKarte)
-            } else {
-                falschGeraten()
-            }
-        }
-    }
-}
-
-fun falschGeraten() {
-    println("Das war leider falsch! Viel Glück beim nächsten Versuch!")
-    leben--
-    println()
-    println("Neuer Versuch? [1] für ja, [2] für nein")
-    entscheidung = readln().toInt()
-    if (entscheidung == 1) {
-        leben = 1
-        hoeherTieferOderGleich()
-    }
+fun standartEinstellungen(){
+    //Alle Voreinstellungen auf Standart
+    rundenAnzahl = 0
+    witzbold = 0
+    unserKartenDeck = standartKartendeck.shuffled().toMutableList()
+    leben = 1
+    gespielteRunden = 0
+    zufaelligeKarte = ""
+    bereitsGespielteKarten = mutableListOf<String>()
+    eingabe = 0
+    index = 0
 }
 
 fun kartenWert(karte: String): Int {
