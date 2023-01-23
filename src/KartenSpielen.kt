@@ -109,7 +109,7 @@ fun mischen(){
 fun hoeherTieferGleich() {
     leben = 1
     gespielteRunden = 0
-    while (leben == 1) {
+    while (leben == 1 && gespielteRunden <= rundenAnzahl) {
         if (gespielteRunden == 0 && index == 0) {
             gespielteRunden++
             println("Runde ${gespielteRunden} von ${rundenAnzahl}")
@@ -135,16 +135,17 @@ fun hoeherTieferGleich() {
             zufaelligeKarte = unserKartenDeck.random()
             println("Unsere Karte ist: $zufaelligeKarte [${kartenWert(zufaelligeKarte)}]")
             addToBereitsGespielteKarte_RemoveFromUnserKartenDeck()
-            println(bereitsGespielteKarten)
             println("${kartenWert(bereitsGespielteKarten[index])} vs. ${kartenWert(zufaelligeKarte)}")
+            println(bereitsGespielteKarten)
             spielEntscheidung()
         }
-        else if(gespielteRunden > rundenAnzahl){
+        else{
             println("Maximale Spielrunden absolviert!")
             spielNeuStarten()
         }
     }
 }
+
 fun addToBereitsGespielteKarte_RemoveFromUnserKartenDeck(){
     bereitsGespielteKarten.add(zufaelligeKarte)
     unserKartenDeck.remove(zufaelligeKarte)
